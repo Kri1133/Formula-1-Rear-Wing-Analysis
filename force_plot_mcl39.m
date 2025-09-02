@@ -6,16 +6,13 @@ files = ["D:\F1 comparison report\MCL39 data\forces\20ms.csv";
     "D:\F1 comparison report\MCL39 data\forces\70ms.csv";];
 cutoffTime = 500;   % seconds threshold for averages
 
-% Storage for avg-vs-speed plots
 speeds   = [];
 avgFyAll = [];
 avgFzAll = [];
 
-% --- Figure for Fy ---
 figure(1); clf; set(gcf,'Color','w'); hold on; grid on;
 xlabel('Time (s)'); ylabel('Downforce (N)');
 
-% --- Figure for Fz ---
 figure(2); clf; set(gcf,'Color','w'); hold on; grid on;
 xlabel('Time (s)'); ylabel('Drag (N)');
 
@@ -38,13 +35,11 @@ for i = 1:numel(files)
     end
     fname = files{i};
 
-    % Read the table (keeps original headers intact)
     T = readtable(fname, 'PreserveVariableNames', true, 'TextType', 'string');
 
     headers = string(T.Properties.VariableNames);
     hlow    = lower(headers);
 
-    % Find columns (robust-ish matching)
     it = find(contains(hlow,"time"),1);
     iy = find(contains(hlow,"y") & contains(hlow,"force"),1);
     iz = find(contains(hlow,"z") & contains(hlow,"force"),1);
@@ -59,14 +54,12 @@ for i = 1:numel(files)
     Fy = 2 * T{:,iy};
     Fz = 2 * T{:,iz};
 
-    % Plot on separate figures
     figure(1);
     plot(t, Fy, 'LineWidth', 1.4, 'DisplayName', strcat(num2str(velocity^2), ' m/s'));
 
     figure(2);
     plot(t, Fz, 'LineWidth', 1.4, 'DisplayName', strcat(num2str(velocity), ' m/s'));
 
-    % Compute averages after cutoffTime
     mask = (t >= cutoffTime) & isfinite(Fy) & isfinite(Fz);
     if any(mask)
         avgFy = mean(Fy(mask), 'omitnan');
@@ -74,7 +67,6 @@ for i = 1:numel(files)
         fprintf('%s | Avg Downforce After %gs = %.6f | Avg Drag After %gs = %.6f\n', ...
                  strcat(num2str(velocity), ' m/s'), cutoffTime, avgFy, cutoffTime, avgFz);
 
-        % --- Extract speed from filename (e.g., '20ms.csv', '25m_s.csv', '30mps.csv') ---
         tok = regexp(fname, '(?<spd>\d+(\.\d+)?)\s*(m\/s|mps|ms)', 'names', 'ignorecase');
         if ~isempty(tok)
             spd = str2double(tok(1).spd);
@@ -96,11 +88,10 @@ for i = 1:numel(files)
     end
 end
 
-% Add legends to time-series figures
 figure(1); legend('Location','best');
 figure(2); legend('Location','best');
 
-% --- Average Fy vs Speed ---
+% Average Fy vs Speed
 if ~isempty(speeds)
     [spds, idx] = sort(speeds);
     FyAvgSorted = avgFyAll(idx);
@@ -110,7 +101,7 @@ if ~isempty(speeds)
     xlabel('Velocity (m/s)'); ylabel(sprintf('Avg Downforce After %gs (N)', cutoffTime));
 end
 
-% --- Average Fz vs Speed ---
+% Average Fz vs Speed
 if ~isempty(speeds)
     [spds, idx] = sort(speeds);
     FzAvgSorted = avgFzAll(idx);
@@ -119,3 +110,4 @@ if ~isempty(speeds)
     plot(spds, FzAvgSorted, '-o', 'LineWidth', 1.6, 'MarkerSize', 6);
     xlabel('Velocity (m/s)'); ylabel(sprintf('Avg Drag After %gs (N)', cutoffTime));
 end
+
